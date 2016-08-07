@@ -1,0 +1,116 @@
+<html>
+  <head>
+    <title>Garage Door Control</title>
+    <script src="jquery.min.js"></script>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <style type="text/css">
+      body {
+        background-color: #212121;
+        color: #FAFAFA;
+        text-align: center;
+        font-family: "Arial";
+        font-size: 1.25em;
+      }
+
+      hr {
+        width: 90%;
+      }
+
+      .garage1, .garage2 {
+        display: none;
+      }
+
+      .garage * {
+        margin: .5em;
+      }
+      .garage .label {
+        font-weight: bold;
+      }
+      .garage .label:after {
+        content: "Unknown";
+        color: #FF4242;
+      }
+      .garage .trigger {
+        display: inline-block;
+        width: 85%;
+        color: #FAFAFA;
+        text-decoration: none;
+      }
+      .garage .trigger:before {
+        display: block;
+        background-color: #636363;
+        border-radius: .4em;
+        padding: .5em;
+        content: "Trigger the Door";
+      }
+      .garage .trigger:hover:before {
+        background-color: #808080;
+      }
+      .garage.closed .label:after {
+        content: "Closed";
+        color: #61FF5C;
+      }
+      .garage.closed .trigger:before {
+        content: "Open the Door";
+      }
+      .garage.open .label:after {
+        content: "Open";
+        color: #FF4242;
+      }
+      .garage.open .trigger:before {
+        content: "Close the Door";
+      }
+    </style>
+    <script language="javascript" type="text/javascript">
+      $(function(){
+        var $garage1 = $(".garage1"),
+            $garage2 = $(".garage2");
+            
+        function updateStatus(){
+          
+          $.getJSON("status", function(status){
+            $garage1.removeClass("open").removeClass("closed");
+            $garage2.removeClass("open").removeClass("closed");
+            if(status[0] == 1)
+              $garage1.addClass("open");
+            if(status[0] == 0)
+              $garage1.addClass("closed");
+            if(status[1] == 1)
+              $garage2.addClass("open");
+            if(status[1] == 0)
+              $garage2.addClass("closed");
+          }).always(function(){
+            setTimeout(updateStatus, 1000);
+          });
+        }
+        updateStatus();
+        $.getJSON("info", function(info, infoXHR){
+          $("h1, title").text(info.description);
+          $(info.relays == 1 ? ".garage1" : ".garage").css("display","block");
+        });
+        $(".trigger").click(function(e){
+          e.preventDefault();
+          var url = $(this).attr("href");
+          setTimeout(function(){
+            if(confirm("Are you sure?"))
+              $.get(url);
+          },1)
+        });
+      });
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div>
+      <h1></h1>
+      <div class="garage1 garage">
+        <div class="label">Garage Door 1: </div><a href="trigger1" class="trigger"></a>
+      </div>
+      <hr class="garage2"/>
+      <div class="garage2 garage">
+        <div class="label">Garage Door 2: </div><a href="trigger2" class="trigger"></a>
+      </div>
+    </div>
+  </body>
+</html>

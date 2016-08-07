@@ -1,0 +1,28 @@
+doctype html
+html(lang="en")
+  head
+    title ESP Configuration
+  body
+    h3 ESP Configuration
+    form(method="POST",action="/")
+      table
+        tr
+          td Access Point Name:
+          td: input(type="text", name="ap")
+        tr
+          td Wi-Fi Password:
+          td: input(type="password", name="psw")
+        tr
+          td Descriptive Name:
+          td: input(type="text", name="desc")
+        tr
+          td Device Type:
+          td: select(name="dt")
+            option(value="1") Single Door Garage
+            option(value="2") Two Door Garage
+            option(value="3") Single Switch
+            option(value="4") Double Switch
+            option(value="5") DS18B Temperature Sensor
+        tr
+          td(colspan="2")
+            input(type="submit", value="Save and Restart")

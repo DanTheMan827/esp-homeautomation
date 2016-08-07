@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>ESP Configuration</title>
+  </head>
+  <body>
+    <h3>ESP Configuration</h3>
+    <form method="POST" action="/">
+      <table>
+        <tr>
+          <td>Access Point Name:</td>
+          <td>
+            <input type="text" name="ap">
+          </td>
+        </tr>
+        <tr>
+          <td>Wi-Fi Password:</td>
+          <td>
+            <input type="password" name="psw">
+          </td>
+        </tr>
+        <tr>
+          <td>Descriptive Name:</td>
+          <td>
+            <input type="text" name="desc">
+          </td>
+        </tr>
+        <tr>
+          <td>Device Type:</td>
+          <td>
+            <select name="dt">
+              <option value="1">Single Door Garage</option>
+              <option value="2">Two Door Garage</option>
+              <option value="3">Single Switch</option>
+              <option value="4">Double Switch</option>
+              <option value="5">DS18B Temperature Sensor</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2">
+            <input type="submit" value="Save and Restart">
+          </td>
+        </tr>
+      </table>
+    </form>
+  </body>
+</html>

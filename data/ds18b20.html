@@ -1,0 +1,49 @@
+<html>
+  <head>
+    <title>Garage Door Control</title>
+    <script src="jquery.min.js"></script>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <style type="text/css">
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        background-color: #212121;
+        color: #FAFAFA;
+        text-align: center;
+        font-family: "Arial";
+        font-size: 1.25em;
+        margin: 0;
+        padding: 0;
+        padding: .5em;
+      }
+
+      h1 {
+        font-weight: bold;
+        margin: 0 0 .5em 0;
+      }
+    </style>
+    <script language="javascript" type="text/javascript">
+      $(function(){
+        $.getJSON("info", function(data){
+          $("#title, title").text(data.description + " Temperature");
+        });
+        function updateStatus(){
+          $.getJSON("temperature", function(weather){
+            $("#temperature").html((Math.round(weather.temperature * 100) / 100) + "°C / " + (Math.round(((weather.temperature * 9 / 5) + 32) * 100) / 100) + "°F");
+          }).always(function(){
+            setTimeout(updateStatus, 1000);
+          });
+        }
+        updateStatus();
+      });
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <h1 id="title"></h1>
+    <label id="temperature"></label>
+  </body>
+</html>
