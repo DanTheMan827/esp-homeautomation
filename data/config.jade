@@ -2,27 +2,77 @@ doctype html
 html(lang="en")
   head
     title ESP Configuration
+    style(type="text/css")
+      | th {
+      |   text-align: right;
+      |   font-weight: bold;
+      | }
   body
-    h3 ESP Configuration
+    h1 ESP Configuration
+    hr
     form(method="POST",action="/")
+      
       table
         tr
-          td Access Point Name:
+          td(colspan="2")
+            h2 Wi-Fi Settings
+        tr
+          th Access Point Name:
           td: input(type="text", name="ap")
         tr
-          td Wi-Fi Password:
+          th Wi-Fi Password:
           td: input(type="password", name="psw")
         tr
-          td Descriptive Name:
+          td(colspan="2")
+            h2 ESP Settings
+        tr
+          th Descriptive Name:
           td: input(type="text", name="desc")
         tr
-          td Device Type:
+          th Device Type:
           td: select(name="dt")
             option(value="1") Single Door Garage
             option(value="2") Two Door Garage
             option(value="3") Single Switch
             option(value="4") Double Switch
             option(value="5") DS18B Temperature Sensor
+            option(value="6") DS18B Thermostat
+        tr
+          td(colspan="2")
+            h2 Garage Door Settings
+        tr
+          th Invert Door 1 Sensor:
+          td: input(type="checkbox", name="invSense1", value="1")
+        tr
+          th Invert Door 2 Sensor:
+          td: input(type="checkbox", name="invSense2", value="1")
+        tr
+          td(colspan="2")
+            h2 Switch Settings
+        tr
+          th Button 1 is NC:
+          td: input(type="checkbox", name="invSense1", value="1")
+        tr
+          th Button 2 is NC:
+          td: input(type="checkbox", name="invSense2", value="1")
+        tr
+          td(colspan="2")
+            h2 MQTT
+        tr
+          th Host:
+          td: input(type="text", name="mqttHost", placeholder="host to send information to.")
+        tr
+          th Port:
+          td: input(type="text", name="mqttPort", placeholder="MQTT port.", value="1883")
+        tr
+          th Username:
+          td: input(type="text", name="mqttUser", placeholder="MQTT username")
+        tr
+          th Password:
+            td: input(type="password", name="mqttPass", placeholder="MQTT password")
+        tr
+          th Interval:
+          td: input(type="text", name="mqttInt", value="10", placeholder="Interval between data transmissions.")
         tr
           td(colspan="2")
             input(type="submit", value="Save and Restart")

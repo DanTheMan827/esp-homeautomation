@@ -1,8 +1,12 @@
 #include <Arduino.h>
+#include <Bounce2.h>
 class GarageDoor {
   int relayPin;
   int sensorPin;
   int pauseTime;
+  bool invertRelay;
+  bool invertSensor;
+  Bounce debouncer = Bounce();
 
   bool ticking;
   unsigned long nextTrigger;
@@ -18,9 +22,20 @@ class GarageDoor {
     pinMode(relay, OUTPUT);
     pinMode(sensor, INPUT_PULLUP);
     digitalWrite(relay, HIGH);
+    invertRelay = false;
+    invertSensor = false;
+    debouncer.attach(sensor);
+    debouncer.interval(200);
+  }
+  bool reverseRelay(bool reverse){
+    invertRelay = reverse;
+  }
+  bool reverseSensor(bool reverse){
+    invertSensor = reverse;
+    Serial.println(reverse ? "Reverse Sensor: true" : "false");
   }
   bool isOpen(){
-    return (digitalRead(sensorPin) == HIGH);
+    return (debouncer.read() == (invertSensor ? LOW : HIGH));
   }
   bool openDoor(){
     if (isOpen())
@@ -35,16 +50,27 @@ class GarageDoor {
     return true;
   }
   bool triggerDoor(){
-    digitalWrite(relayPin,LOW);
+    digitalWrite(relayPin,(invertRelay ? HIGH : LOW));
     nextTrigger = millis() + pauseTime;
     ticking = true;
     return true;
   }
-  void Update(){
+  bool read(){
+    return debouncer.read();
+  }
+  bool Update(){
     if (ticking == true && nextTrigger < millis()){
       ticking = false;
-      digitalWrite(relayPin,HIGH);
+      digitalWrite(relayPin,(invertRelay ? LOW : HIGH));
     }
+    if (debouncer.update()) {
+        Serial.print("\r\nPin ");
+        Serial.print(sensorPin);
+        Serial.print(" ");
+        Serial.print(debouncer.read());
+        return true;
+    }
+    return false;
   }
 };
 

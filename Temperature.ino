@@ -11,6 +11,12 @@ float getTemperature(){
   return temp;
 }
 
+String getTemperatureString(){
+  String s;
+  s = getTemperature();
+  return s;
+}
+
 void handleTemperature() {
   String s;
   s = "{ \"temperature\" : ";
