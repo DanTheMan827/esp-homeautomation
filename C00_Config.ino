@@ -137,5 +137,5 @@ void resetConfig(){
   }
   Serial.println("Reset config");
   ESP.eraseConfig();
-  ESP.reset();
+  ESP.restart();
 }

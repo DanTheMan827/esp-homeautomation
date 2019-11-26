@@ -369,7 +369,7 @@ void mqttReconnect() {
   // Attempt to connect
   Serial.print(clientId);
   Serial.print(mqttUser);
-  if (mqttClient.connect(clientId.c_str(), mqttUser.c_str(), mqttPass.c_str(), mqttGetTopic("Status").c_str(), 1, true, "Offline")) {
+  if (mqttClient.connect(clientId.c_str(), mqttUser.c_str(), mqttPass.c_str(), mqttGetTopic("LWT").c_str(), 1, true, "Offline")) {
     Serial.println("connected");
     mqttClient.subscribe(mqttGetTopic("Command").c_str());
     mqttPublish("Description", device_description.c_str());
@@ -386,12 +386,12 @@ void mqttReconnect() {
       mqttPublish("Type", "thermostat");
       {
         char tempString[10];
-        sprintf(tempString, "%f", thermostatOnTemp);
+        sprintf(tempString, "%.2f", thermostatOnTemp);
         mqttPublish("OnTemp", tempString);
       }
       {
         char tempString[10];
-        sprintf(tempString, "%f", thermostatOffTemp);
+        sprintf(tempString, "%.2f", thermostatOffTemp);
         mqttPublish("OffTemp", tempString);
       }
     }
@@ -425,7 +425,7 @@ bool setThermostatTemps(float onTemp, float offTemp) {
 
   if (offTemp != -100.0)
     thermostatOffTemp = offTemp;
-  
+
   json["wap"] = ssid;
   json["wpsk"] = password;
   json["mode"] = device_mode;
@@ -553,7 +553,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       bool rt = setThermostatTemps(atof(payloadString.c_str()), -100.0);
 
       char tempString[10];
-      sprintf(tempString, "%f", thermostatOnTemp);
+      sprintf(tempString, "%.2f", thermostatOnTemp);
       mqttPublish("OnTemp", tempString);
     }
     if (length > 8 && !strncmp("offTemp=", (const char*)payload, 8)) {
@@ -562,14 +562,34 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       bool rt = setThermostatTemps(-100.0, atof(payloadString.c_str()));
 
       char tempString[10];
-      sprintf(tempString, "%f", thermostatOffTemp);
+      sprintf(tempString, "%.2f", thermostatOffTemp);
       mqttPublish("OffTemp", tempString);
     }
   }
 
-  if (infoType == INFO_TYPE_TEMPERATURE || infoType == INFO_TYPE_THERMOSTAT) {
+  if (infoType == INFO_TYPE_TEMPERATURE) {
     mqttIf("status", {
       mqttPublish("Temperature", getTemperatureString().c_str());
+      return;
+    });
+  }
+
+  if (infoType == INFO_TYPE_THERMOSTAT) {
+    mqttIf("status", {
+      mqttPublish("Relay1", isPinOn(RELAY_PIN_2, RELAY_2_REVERSE) ? "0" : "1");
+      if (relayCount > 1) {
+        mqttPublish("Relay2", isPinOn(RELAY_PIN_2, RELAY_2_REVERSE) ? "0" : "1");
+      }
+      {
+        char tempString[10];
+        sprintf(tempString, "%.2f", thermostatOnTemp);
+        mqttPublish("OnTemp", tempString);
+      }
+      {
+        char tempString[10];
+        sprintf(tempString, "%.2f", thermostatOffTemp);
+        mqttPublish("OffTemp", tempString);
+      }
       return;
     });
   }
@@ -582,8 +602,8 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   }
 
   mqttIf("reboot", {
-    mqttPublish("Status", "Offline");
-    ESP.reset();
+    mqttPublish("LWT", "Offline");
+    ESP.restart();
   });
 }
 
@@ -599,7 +619,7 @@ void mqttPublish(const char* topic, const char* message) {
 }
 
 void handleMqttPub() {
-  mqttPublish("Status", "Online");
+  mqttPublish("LWT", "Online");
   if (infoType == INFO_TYPE_GARAGEDOOR) {
     mqttPublish("Sensor1", garageDoor1.isOpen() ? "1" : "0");
   } else if (infoType != INFO_TYPE_TEMPERATURE) {
@@ -623,12 +643,12 @@ void handleMqttPub() {
       }
       {
         char tempString[10];
-        sprintf(tempString, "%f", thermostatOnTemp);
+        sprintf(tempString, "%.2f", thermostatOnTemp);
         mqttPublish("OnTemp", tempString);
       }
       {
         char tempString[10];
-        sprintf(tempString, "%f", thermostatOffTemp);
+        sprintf(tempString, "%.2f", thermostatOffTemp);
         mqttPublish("OffTemp", tempString);
       }
     }

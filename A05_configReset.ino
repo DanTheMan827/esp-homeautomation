@@ -44,7 +44,7 @@ class ConfigReset
       }
       Serial.println("Reset config");
       ESP.eraseConfig();
-      ESP.reset();
+      ESP.restart();
     }
   }
 };

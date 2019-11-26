@@ -4,7 +4,7 @@ class NoWirelessReboot
     // These are initialized at startup
     int interval; // the duration the reset button has to be held down.
     bool isConnected;
-    bool enabled = false;
+    bool enabled;
 
     // These maintain the current state
     unsigned long previousMillis;   // will store last time button was pushed
@@ -14,6 +14,7 @@ class NoWirelessReboot
     {
       interval = noConnectionDuration;
       previousMillis = millis();
+      enabled = false;
     }
 
     void Enable()
@@ -45,7 +46,7 @@ class NoWirelessReboot
       }
 
       if (enabled && isConnected == false && millis() - previousMillis >= interval) {
-        ESP.reset();
+        ESP.restart();
       }
     }
 };
