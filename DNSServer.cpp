@@ -81,7 +81,7 @@ bool DNSServer::requestIncludesOnlyOneQuestion()
 
 String DNSServer::getDomainNameWithoutWwwPrefix()
 {
-  String parsedDomainName = "";
+  String parsedDomainName = F("");
   unsigned char *start = _buffer + 12;
   if (*start == 0)
   {
@@ -104,7 +104,7 @@ String DNSServer::getDomainNameWithoutWwwPrefix()
     }
     else
     {
-      parsedDomainName += ".";
+      parsedDomainName += F(".");
     }
   }
 }
@@ -139,15 +139,15 @@ void DNSServer::replyWithIP()
 
 
   #ifdef DEBUG
-    DEBUG_OUTPUT.print("DNS responds: ");
+    DEBUG_OUTPUT.print(F("DNS responds: "));
     DEBUG_OUTPUT.print(_resolvedIP[0]);
-    DEBUG_OUTPUT.print(".");
+    DEBUG_OUTPUT.print(F("."));
     DEBUG_OUTPUT.print(_resolvedIP[1]);
-    DEBUG_OUTPUT.print(".");
+    DEBUG_OUTPUT.print(F("."));
     DEBUG_OUTPUT.print(_resolvedIP[2]);
-    DEBUG_OUTPUT.print(".");
+    DEBUG_OUTPUT.print(F("."));
     DEBUG_OUTPUT.print(_resolvedIP[3]);
-    DEBUG_OUTPUT.print(" for ");
+    DEBUG_OUTPUT.print(F(" for "));
     DEBUG_OUTPUT.println(getDomainNameWithoutWwwPrefix());
   #endif
 }
@@ -162,4 +162,3 @@ void DNSServer::replyWithCustomCode()
   _udp.write(_buffer, sizeof(DNSHeader));
   _udp.endPacket();
 }
-
