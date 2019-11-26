@@ -22,7 +22,7 @@ This is an arduino sketch for ESP-8266 based boards to enable various home autom
 - Sensor 1 connects to D2
 - Sensor 2 connects to D6
 
-**For DS18B20 temperature sensors
+**For DS18B20 temperature sensors**
 
 - 3.3V and ground connect to their corresponding pins
 - Data connects to D5
