@@ -447,6 +447,8 @@ void setup(void)
       mqttClient.setCallback(mqttCallback);
     }
 
+    sendConfig("/config/");
+
     ServerSendSpiff("/jquery.min.js", "/jquery.min.js");
 
     ServerOnGet("/info", {

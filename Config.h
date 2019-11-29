@@ -10,29 +10,9 @@
 const byte DNS_PORT = 53;       // Capture DNS requests on port 53
 IPAddress apIP(192, 168, 1, 1); // Private network for server
 
-void configMode()
+void sendConfig(const char *url)
 {
-  inConfigMode = true;
-  String wifi_ssid = "ESP ";
-  wifi_ssid += String(ESP.getChipId(), HEX);
-  int str_len = wifi_ssid.length() + 1;
-  char *char_array = new char[str_len];
-  wifi_ssid.toCharArray(char_array, str_len);
-
-  WiFi.mode(WIFI_AP);
-  WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
-  WiFi.softAP(char_array);
-  delete char_array;
-
-  // if DNSServer is started with "*" for domain name, it will reply with
-  // provided IP to all DNS request
-  dnsServer.start(DNS_PORT, "*", apIP);
-
-  IPAddress myIP = WiFi.softAPIP();
-  Serial.print("AP IP address: ");
-  Serial.println(myIP);
-
-  server.on("/", []() {
+  server.on(url, []() {
     if (server.hasArg("ap"))
     {
       DynamicJsonBuffer jsonBuffer;
@@ -68,6 +48,31 @@ void configMode()
     else
       handleFileRead("/config.html");
   });
+}
+
+void configMode()
+{
+  inConfigMode = true;
+  String wifi_ssid = "ESP ";
+  wifi_ssid += String(ESP.getChipId(), HEX);
+  int str_len = wifi_ssid.length() + 1;
+  char *char_array = new char[str_len];
+  wifi_ssid.toCharArray(char_array, str_len);
+
+  WiFi.mode(WIFI_AP);
+  WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
+  WiFi.softAP(char_array);
+  delete char_array;
+
+  // if DNSServer is started with "*" for domain name, it will reply with
+  // provided IP to all DNS request
+  dnsServer.start(DNS_PORT, "*", apIP);
+
+  IPAddress myIP = WiFi.softAPIP();
+  Serial.print("AP IP address: ");
+  Serial.println(myIP);
+
+  sendConfig("/");
   server.onNotFound([]() {
     handleFileRead("/config.html");
   });
