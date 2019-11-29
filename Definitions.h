@@ -4,6 +4,7 @@
 #include "pins_arduino.h"
 #include <ESP8266WebServer.h>
 #include <PubSubClient.h>
+#include <Bounce2.h>
 #include "./DNSServer.h"
 #include "./WiFiStatusLED.h"
 #include "./Flasher.h"
@@ -40,12 +41,16 @@ bool RELAY_REVERSE_2 = false;
 bool SENSOR_REVERSE_1 = false;
 bool SENSOR_REVERSE_2 = false;
 
+#define sensorOnState(pin) (SENSOR_REVERSE_##pin ? HIGH : LOW)
+#define relayOnState(pin) (RELAY_REVERSE_##pin ? HIGH : LOW)
 #define offState1 (RELAY_REVERSE_1 ? LOW : HIGH)
 #define onState1 (RELAY_REVERSE_1 ? HIGH : LOW)
 #define offState2 (RELAY_REVERSE_2 ? LOW : HIGH)
 #define onState2 (RELAY_REVERSE_2 ? HIGH : LOW)
 
 bool lastRelayState1;
+Bounce debouncer1 = Bounce();
+Bounce debouncer2 = Bounce();
 ESP8266WebServer server(80);
 DNSServer dnsServer; // Create the DNS object
 WiFiStatusLED wifiLED(ESP8266_LED, 200, 1000);

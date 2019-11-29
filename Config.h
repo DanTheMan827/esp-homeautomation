@@ -143,6 +143,7 @@ bool loadConfig()
   mqttUser = (const char *)json["mqttUser"];
   mqttPass = (const char *)json["mqttPass"];
   mqttInterval = json["mqttInt"];
+  mqttEnabled = strlen((const char *)json["mqttHost"]) > 0;
 
   return true;
 }

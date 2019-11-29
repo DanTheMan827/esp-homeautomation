@@ -5,6 +5,7 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <pins_arduino.h>
+#include <Bounce2.h>
 #include "./Definitions.h"
 #include "./Macros.h"
 #include "./floatToString.h"
@@ -174,9 +175,17 @@ String mqttGetTopic(const char *topic)
   return outTopic;
 }
 
-void mqttPublish(const char *topic, const char *message)
+String mqttGetDiscoveryTopic()
 {
-  if (!(mqttEnabled && inConfigMode == false && WiFi.status() == WL_CONNECTED))
+  String outTopic;
+  outTopic = "esp-homeautomation/esp-";
+  outTopic += String(ESP.getChipId(), HEX);
+  return outTopic;
+}
+
+void mqttPublish(const char *topic, const char *message, bool retain)
+{
+  if (mqttEnabled == false || inConfigMode == true || WiFi.status() != WL_CONNECTED)
   {
     return;
   }
@@ -184,8 +193,12 @@ void mqttPublish(const char *topic, const char *message)
   if (mqttClient.connected())
   {
     printf("Topic: %s\nMessage: %s\n\n", topic, message);
-    mqttClient.publish(mqttGetTopic(topic).c_str(), message, true);
+    mqttClient.publish(mqttGetTopic(topic).c_str(), message, retain);
   }
+}
+void mqttPublish(const char *topic, const char *message)
+{
+  mqttPublish(topic, message, true);
 }
 
 void handleMqttPub()
@@ -193,22 +206,22 @@ void handleMqttPub()
   mqttPublish("LWT", "Online");
   if (infoType == INFO_TYPE_GARAGEDOOR)
   {
-    mqttPublish("Sensor1", garageDoor1.isOpen() ? "1" : "0");
+    mqttPublishBool("Sensor1", garageDoor1.isOpen());
   }
   else if (infoType != INFO_TYPE_TEMPERATURE)
   {
-    mqttPublish("Relay1", isRelayOn(1) ? "1" : "0");
+    mqttPublishBool("Relay1", isRelayOn(1));
   }
 
   if (relayCount > 1)
   {
     if (infoType == INFO_TYPE_GARAGEDOOR)
     {
-      mqttPublish("Sensor2", garageDoor2.isOpen() ? "1" : "0");
+      mqttPublishBool("Sensor2", garageDoor2.isOpen());
     }
     else if (infoType != INFO_TYPE_TEMPERATURE)
     {
-      mqttPublish("Relay2", isRelayOn(2) ? "1" : "0");
+      mqttPublishBool("Relay2", isRelayOn(2));
     }
   }
 
@@ -217,10 +230,10 @@ void handleMqttPub()
     mqttPublishFloat("Temperature", getTemperature());
     if (infoType == INFO_TYPE_THERMOSTAT)
     {
-      mqttPublish("Relay1", isRelayOn(1) ? "1" : "0");
+      mqttPublishBool("Relay1", isRelayOn(1));
       if (relayCount > 1)
       {
-        mqttPublish("Relay2", isRelayOn(2) ? "1" : "0");
+        mqttPublishBool("Relay2", isRelayOn(2));
       }
       mqttPublishFloat("OnTemp", thermostatOnTemp);
       mqttPublishFloat("OffTemp", thermostatOffTemp);
@@ -237,10 +250,10 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
   if (infoType == INFO_TYPE_GARAGEDOOR)
   {
     mqttIf("status", {
-      mqttPublish("Sensor1", garageDoor1.isOpen() ? "1" : "0");
+      mqttPublishBool("Sensor1", garageDoor1.isOpen());
       if (device_mode == 2)
       {
-        mqttPublish("Sensor2", garageDoor2.isOpen() ? "1" : "0");
+        mqttPublishBool("Sensor2", garageDoor2.isOpen());
       }
     });
 
@@ -280,59 +293,53 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
   if (infoType == INFO_TYPE_SWITCH)
   {
     mqttIf("status", {
-      mqttPublish("Relay1", isRelayOn(1) ? "1" : "0");
+      mqttPublishBool("Relay1", isRelayOn(1));
       if (relayCount > 1)
       {
-        mqttPublish("Relay2", isRelayOn(2) ? "1" : "0");
+        mqttPublishBool("Relay2", isRelayOn(2));
       }
       return;
     });
 
     mqttIf("status1", {
-      mqttPublish("Relay1", isRelayOn(1) ? "1" : "0");
+      mqttPublishBool("Relay1", isRelayOn(1));
       return;
     });
 
     mqttIf("on1", {
       relayOn(1);
-      mqttPublish("Relay1", "1");
       return;
     });
 
     mqttIf("off1", {
       relayOff(1);
-      mqttPublish("Relay1", "0");
       return;
     });
 
     mqttIf("toggle1", {
       relayToggle(1);
-      mqttPublish("Relay1", isRelayOn(1) ? "1" : "0");
       return;
     });
 
     if (relayCount > 1)
     {
       mqttIf("status2", {
-        mqttPublish("Relay2", isRelayOn(2) ? "1" : "0");
+        mqttPublishBool("Relay2", isRelayOn(2));
         return;
       });
 
       mqttIf("on2", {
         relayOn(2);
-        mqttPublish("Relay2", "1");
         return;
       });
 
       mqttIf("off2", {
         relayOff(2);
-        mqttPublish("Relay2", "0");
         return;
       });
 
       mqttIf("toggle2", {
         relayToggle(2);
-        mqttPublish("Relay2", isRelayOn(2) ? "1" : "0");
         return;
       });
     }
@@ -369,10 +376,10 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
   {
     mqttIf("status", {
       mqttPublishFloat("Temperature", getTemperature());
-      mqttPublish("Relay1", isRelayOn(1) ? "1" : "0");
+      mqttPublishBool("Relay1", isRelayOn(1));
       if (relayCount > 1)
       {
-        mqttPublish("Relay2", isRelayOn(2) ? "1" : "0");
+        mqttPublishBool("Relay2", isRelayOn(2));
       }
       mqttPublishFloat("OnTemp", thermostatOnTemp);
       mqttPublishFloat("OffTemp", thermostatOffTemp);
@@ -406,47 +413,21 @@ void setup(void)
 
   if (loadConfig())
   {
+    if (infoType == INFO_TYPE_SWITCH)
+    {
+      debouncer1.attach(SENSOR_PIN_1);
+      debouncer1.interval(200);
+      if (relayCount > 1)
+      {
+        debouncer2.attach(SENSOR_PIN_2);
+        debouncer2.interval(200);
+      }
+    }
+
     wirelessWatchdog.Enable();
     inConfigMode = false;
     infoType = getInfoType();
     relayCount = getRelayCount();
-
-    attachInterrupt(digitalPinToInterrupt(SENSOR_PIN_1), []() {
-      if (infoType == INFO_TYPE_SWITCH)
-      {
-        if (isSensorOn(1))
-        {
-          if (isRelayOn(1))
-          {
-            relayOff(1);
-          }
-          else
-          {
-            relayOn(1);
-          }
-        }
-        mqttPublish("Relay1", isRelayOn(1) ? "1" : "0");
-      }
-    },
-                    CHANGE);
-    attachInterrupt(digitalPinToInterrupt(SENSOR_PIN_2), []() {
-      if (infoType == INFO_TYPE_SWITCH && relayCount > 1)
-      {
-        if (isSensorOn(2))
-        {
-          if (isRelayOn(2))
-          {
-            relayOff(2);
-          }
-          else
-          {
-            relayOn(2);
-          }
-        }
-        mqttPublish("Relay2", isRelayOn(2) ? "1" : "0");
-      }
-    },
-                    CHANGE);
 
     pinMode(ONE_WIRE_BUS, INPUT_PULLUP);
     WiFi.begin(ssid.c_str(), password.c_str());
@@ -460,9 +441,8 @@ void setup(void)
     Serial.println(device_mode);
     Serial.println(device_description);
 
-    if (mqttHost != "")
+    if (mqttEnabled)
     {
-      mqttEnabled = true;
       mqttClient.setServer(mqttHost.c_str(), mqttPort);
       mqttClient.setCallback(mqttCallback);
     }
@@ -513,28 +493,24 @@ void setup(void)
     {
       pinMode(RELAY_PIN_1, OUTPUT);
       relayOff(1);
-      mqttPublish("Relay1", "0");
 
       ServerOnGet("/status1", {
         ServerSendJson(isRelayOn(1) ? "1" : "0");
       });
 
       ServerOnGet("/on1", {
-        relayOn(1);
         ServerSendJson(TRUE_STRING);
-        mqttPublish("Relay1", "1");
+        relayOn(1);
       });
 
       ServerOnGet("/off1", {
-        relayOff(1);
         ServerSendJson(TRUE_STRING);
-        mqttPublish("Relay1", "0");
+        relayOff(1);
       });
 
       ServerOnGet("/toggle1", {
-        relayToggle(1);
         ServerSendJson(TRUE_STRING);
-        mqttPublish("Relay1", isRelayOn(1) ? "1" : "0");
+        relayToggle(1);
       });
 
       if (relayCount > 1)
@@ -547,21 +523,18 @@ void setup(void)
         });
 
         ServerOnGet("/on2", {
-          relayOn(2);
           ServerSendJson(TRUE_STRING);
-          mqttPublish("Relay2", "1");
+          relayOn(2);
         });
 
         ServerOnGet("/off2", {
-          relayOff(2);
           ServerSendJson(TRUE_STRING);
-          mqttPublish("Relay2", "0");
+          relayOff(2);
         });
 
         ServerOnGet("/toggle2", {
-          relayToggle(2);
           ServerSendJson(TRUE_STRING);
-          mqttPublish("Relay2", isRelayOn(2) ? "1" : "0");
+          relayToggle(2);
         });
       }
 
@@ -613,6 +586,7 @@ void mqttReconnect()
   {
     Serial.println("connected");
     mqttClient.subscribe(mqttGetTopic("Command").c_str());
+    mqttClient.publish(mqttGetDiscoveryTopic().c_str(), clientId.c_str(), true);
     mqttPublish("Description", device_description.c_str());
 
     if (device_mode == 1 || device_mode == 2)
@@ -633,9 +607,6 @@ void mqttReconnect()
     if (device_mode == 6)
     {
       mqttPublish("Type", "thermostat");
-
-      mqttPublishFloat("OnTemp", thermostatOnTemp);
-      mqttPublishFloat("OffTemp", thermostatOffTemp);
     }
 
     if (device_mode < 5)
@@ -662,13 +633,26 @@ void loop(void)
   {
     if (garageDoor1.Update())
     {
-      mqttPublish("Sensor1", garageDoor1.isOpen() ? "1" : "0");
+      mqttPublishBool("Sensor1", garageDoor1.isOpen());
     }
     if (garageDoor2.Update())
     {
-      mqttPublish("Sensor2", garageDoor2.isOpen() ? "1" : "0");
+      mqttPublishBool("Sensor2", garageDoor2.isOpen());
     }
   }
+
+  if (infoType == INFO_TYPE_SWITCH)
+  {
+    if (isDebouncerOn(1))
+    {
+      relayToggle(1);
+    }
+    if (relayCount > 1 && isDebouncerOn(2))
+    {
+      relayToggle(2);
+    }
+  }
+
   wifiLED.Update();
   wlStatus.Update();
   ledFlasher.Update();
@@ -694,7 +678,7 @@ void loop(void)
     if (lastRelayState1 != currentRelay1State)
     {
       lastRelayState1 = currentRelay1State;
-      mqttPublish("Relay1", isRelayOn(1) ? "1" : "0");
+      mqttPublishBool("Relay1", isRelayOn(1));
     }
   }
 
